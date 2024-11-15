@@ -1,5 +1,6 @@
 import pygame
 import heapq
+import math
 
 class AStar:
     def __init__(self, graph="digital"):
@@ -20,16 +21,13 @@ class AStar:
 
     def generatePath(self, start, dest):
         start_tile = [start[0] // self.graph_resoultion, start[1] // self.graph_resoultion]
-        print("start_tile: ", start_tile)
         dest_tile = [dest[0] // self.graph_resoultion, dest[1] // self.graph_resoultion]
-        print("dest_tile: ", dest_tile)
         frontier = []
         seen = set()
         cur_node = Node(start_tile[0], start_tile[1], 0, None)
         heapq.heappush(frontier, (0, cur_node)) 
         while len(frontier) != 0:
             _, cur_node = heapq.heappop(frontier)
-            print((cur_node.row, cur_node.col))
             if cur_node.row == dest_tile[0] and cur_node.col == dest_tile[1]:
                 return cur_node.retracePath()
             self.expand_frontier(frontier, seen, cur_node, dest_tile)
@@ -43,7 +41,6 @@ class AStar:
                 if i+node.row >= len(self.graph) or j+node.col >= len(self.graph[0]):
                     continue
                 if (node.row+i, node.col+j) in seen:
-                    print("hit")
                     continue
                 if self.graph[i+node.row][j+node.col] == 1:
                     continue
@@ -51,7 +48,7 @@ class AStar:
                 if i == 0 or j == 0:
                     g = node.cost + 1
                 else:
-                    g = node.cost + 1.41
+                    g = node.cost + math.sqrt(2)
                 f = g + h
                 next_node = ((node.row+i, node.col+j))
                 seen.add(next_node)
@@ -80,9 +77,8 @@ class AStar:
     def run(self):
         self.running = True
         start = [20, 800]
-        dest = [1100, 700]
+        dest = [1100, 800]
         path = self.generatePath(start, dest)
-        print(path)
         while self.running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
