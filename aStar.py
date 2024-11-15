@@ -1,4 +1,5 @@
 import pygame
+import heapq
 
 class AStar:
     def __init__(self, graph="digital"):
@@ -18,8 +19,36 @@ class AStar:
         self.objs = objs
 
     def generatePath(self, start, dest):
-        start_tile = start // self.graph_resoultion
-        dest_tile = dest // self.graph_resoultion
+        start_tile = [start[0] // self.graph_resoultion, start[1] // self.graph_resoultion]
+        print("start_tile: ", start_tile)
+        dest_tile = [dest[0] // self.graph_resoultion, dest[1] // self.graph_resoultion]
+        print("dest_tile: ", dest_tile)
+        frontier = []
+        cur_node = Node(start_tile[0], start_tile[1], 0, None)
+        heapq.heappush(frontier, (0, cur_node)) 
+        while len(frontier) != 0:
+            _, cur_node = heapq.heappop(frontier)
+            if cur_node.row == dest_tile[0] and cur_node.col == dest_tile[1]:
+                return cur_node.retracePath()
+            self.expand_frontier(frontier, cur_node, dest_tile)
+        return None
+
+    def expand_frontier(self, front, node, dest_tile):
+        for i in range(-1,2):
+            for j in range(-1,2):
+                if self.graph[i+node.row][j+node.col] == 1:
+                    continue
+                if i+node.row < 0 or j+node.col < 0:
+                    continue
+                if i+node.row > len(self.graph) or j+node.col > len(self.graph[0]):
+                    continue
+                h = abs(node.row - dest_tile[0]) + abs(node.col - dest_tile[1])
+                if i == 0 or j == 0:
+                    g = node.cost + 1
+                else:
+                    g = node.cost + 1.41
+                f = g + h
+                heapq.heappush(front, (f, Node(node.row+i, node.col+j, g, node))) 
 
     def generateDigitalGraph(self, resolution=20):
         self.forbiden_areas = []
@@ -43,6 +72,8 @@ class AStar:
 
     def run(self):
         self.running = True
+        path = self.generatePath([20, 800], [1100, 100])
+        print(path)
         while self.running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -59,10 +90,31 @@ class AStar:
                 for obj in self.objs:
                     obj_rect = pygame.Rect(obj[0], obj[1], obj[2], obj[3])
                     pygame.draw.rect(self.display, (0,0,0), obj_rect)
+                if path != None:
+                    for tile in path:
+                        tile_rect = pygame.Rect(tile[0]*self.graph_resoultion, tile[1]*self.graph_resoultion, self.graph_resoultion, self.graph_resoultion)
+                        pygame.draw.rect(self.display, (0,0,200), tile_rect)
                 pygame.display.flip()
                 self.clock.tick(60)
         pygame.quit()
 
+
+class Node:
+    def __init__(self, r, c, cost, prev_node):
+        self.row = r
+        self.col = c
+        self.cost = cost
+        self.prev_node = prev_node
+
+    def retracePath(self):
+        if self.prev_node == None:
+            return []
+        path = self.prev_node.retracePath()
+        path.append([self.row, self.col])
+        return path
+
+    def __lt__(self, other):
+        return True
 
 
 if __name__ == "__main__":
@@ -70,4 +122,5 @@ if __name__ == "__main__":
     objs = [[20,20,100,300],[300,50,100,200],[60,700,200,50],[1000,500,300,50],[400,300,320,234],[400,320,654,23],[303,540,430,320],[674,875,44,465]]
     aStar.placeObjects(objs)
     aStar.generateDigitalGraph()
+    path = aStar.generatePath([850, 20], [1100, 20])
     aStar.run()
