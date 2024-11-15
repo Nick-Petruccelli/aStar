@@ -94,6 +94,10 @@ class AStar:
                     for tile in path:
                         tile_rect = pygame.Rect(tile[0]*self.graph_resoultion, tile[1]*self.graph_resoultion, self.graph_resoultion, self.graph_resoultion)
                         pygame.draw.rect(self.display, (0,0,200), tile_rect)
+                for r in range(0, self.display_height, self.graph_resoultion):
+                    pygame.draw.line(self.display, (50,50,50), (0,r), (self.display_width,r))
+                for c in range(0, self.display_width, self.graph_resoultion):
+                    pygame.draw.line(self.display, (50,50,50), (c,0), (c,self.display_height))
                 pygame.display.flip()
                 self.clock.tick(60)
         pygame.quit()
